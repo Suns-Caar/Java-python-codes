@@ -1,5 +1,6 @@
 import java.util.Scanner;
 
+
 interface Temperature {
     public float temp(float t);
 }
