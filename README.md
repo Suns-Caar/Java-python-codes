@@ -1,2 +1,3 @@
-# Java-python-codes
-Java and python codes in java and python branch respectively
+# Software Subsystem
+
+This Branch contains all the tasks given in the Software taskphase within their respective folders 
