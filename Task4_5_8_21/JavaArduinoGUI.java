@@ -1,13 +1,10 @@
 package com.example.demo80085;
 
 
-//import eu.hansolo.medusa.Gauge
-
 import eu.hansolo.medusa.Gauge;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
@@ -25,10 +22,13 @@ import jssc.SerialPortList;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.openxml4j.opc.OPCPackage;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.awt.*;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,7 +36,7 @@ import static jssc.SerialPort.MASK_RXCHAR;
 
 public class code69  extends Application {
     Gauge gauge = new Gauge();
-    Button btn = new Button();
+    javafx.scene.control.Button btn = new javafx.scene.control.Button();
     SerialPort arduinoPort = null;
     ObservableList<String> portList;
 
@@ -62,7 +62,7 @@ public class code69  extends Application {
 //        labelValue.setFont(new Font("Arial", 28));
 //
         gauge.setTitle("DHOOM");
-        gauge.setMaxValue(1023);
+        gauge.setMaxValue(255);
         gauge.setMinValue(0);
 //        gauge.setSkin(DashboardSkin<> );
 
@@ -73,7 +73,13 @@ public class code69  extends Application {
                 .addListener((ChangeListener<String>) (observable, oldValue, newValue) -> {
 
                     System.out.println(newValue);
-                    disconnectArduino();
+                    try {
+                        disconnectArduino();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (InvalidFormatException e) {
+                        e.printStackTrace();
+                    }
                     connectArduino(newValue);
                 });
 
@@ -140,50 +146,53 @@ public class code69  extends Application {
                     SerialPort.STOPBITS_1,
                     SerialPort.PARITY_NONE);
             serialPort.setEventsMask(MASK_RXCHAR);
+            final int[] k = {0},a={0};
+
+
+            String filename = "/home/sanskar/Documents/sample.xlsx";
+            HSSFWorkbook workbook = new HSSFWorkbook();
+            HSSFSheet sheet = workbook.createSheet("excelsheet");
+
             serialPort.addEventListener((SerialPortEvent serialPortEvent) -> {
                 if(serialPortEvent.isRXCHAR()){
+                    k[0]++;
                     try {
+                        int l;
+
 //                            String b = serialPort.readString();
-                        byte[] b = serialPort.readBytes();
-                        int value = b[0] & 0xff;    //convert to int
-                        String st = String.valueOf(value);
-
-
-
-
-                        int k, l;
-                        for (k = 0;k <200; k++) {
-//                            byte[] b = serialPort.readBytes();
-//                            int value = b[0] & 0xff;    //convert to int
-//                            String st = String.valueOf(value);
-
-                            for (l = 0; l < 20; l++) {
-                                String filename = "/home/sanskar/Documents/sample.xlsx";
-                                HSSFWorkbook workbook = new HSSFWorkbook();
-                                HSSFSheet sheet = workbook.createSheet("excelsheet");
-                                HSSFRow row = sheet.createRow(k);
-                                row.createCell(0).setCellValue("value:");
-                                row.createCell(1).setCellValue(value);
-                                System.out.println(st);
-                                FileOutputStream fileOut = new FileOutputStream(filename);
-                                workbook.write(fileOut);
-                                fileOut.close();
-                            }
-                        }
+                        byte[] b1 = serialPort.readBytes();
+                        int value1 = b1[0] & 0xff;    //convert to int
+                        String st1 = String.valueOf(value1);
+                        int her = Integer.parseInt(st1);
 
 
 
 
 
+//
+                            HSSFRow row = sheet.createRow(k[0]);
+                            System.out.println(k[0]);
+                            row.createCell(0).setCellValue("value:");
+                            row.createCell(1).setCellValue(her);
+//                            System.out.println(st);
 
-//                  int value = Integer.parseInt(b);
+//                        }
+
+
+                        FileOutputStream fileOut = new FileOutputStream(filename);
+
+                        workbook.write(fileOut);
+                        fileOut.close();
+
+
+
 
 
 //                        Update label in ui thread
                         Platform.runLater(() -> {
 //                            labelValue.setText(st);
-                            shiftSeriesData((float)value*5/255); //in 5V scale
-                            gauge.setValue(Double.parseDouble(st));
+                            shiftSeriesData((float)value1*5/255); //in 5V scale
+                            gauge.setValue(Double.parseDouble(st1));
                         });
 
                     } catch (SerialPortException | IOException ex) {
@@ -205,7 +214,7 @@ public class code69  extends Application {
         return success;
     }
 
-    public void disconnectArduino(){
+    public void disconnectArduino() throws IOException, InvalidFormatException {
 
         System.out.println("disconnectArduino()");
         if(arduinoPort != null){
@@ -215,6 +224,7 @@ public class code69  extends Application {
                 if(arduinoPort.isOpened()){
                     arduinoPort.closePort();
                 }
+
 
             } catch (SerialPortException ex) {
                 Logger.getLogger(code69.class.getName())
@@ -226,6 +236,7 @@ public class code69  extends Application {
     @Override
     public void stop() throws Exception {
         disconnectArduino();
+
         super.stop();
     }
 
