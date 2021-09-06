@@ -112,7 +112,6 @@ public class code69  extends Application {
         Scene scene = new Scene(root, 500, 400);
 
         primaryStage.setTitle(
-                "arduino-er.blogspot.com: Java + JavaFX + jSSC demo");
         primaryStage.setScene(scene);
         primaryStage.show();
     }
